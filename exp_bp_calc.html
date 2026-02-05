@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>経験値 / BP 計算ツール</title>
+
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        :root {
+            /* Colors */
+            --bg-color: #0f172a;
+            --main-card: #020617;
+            --border-color: #334155;
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+
+            --exp-color: #22c55e;
+            --bp-color: #3b82f6;
+            --accent-color: #facc15;
+
+            /* Spacing */
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+        }
+
+        /* Reset & Base */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.5;
+            padding: var(--spacing-md);
+        }
+
+        /* Utility */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-lg);
+        }
+
+        .card {
+            background-color: var(--main-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: var(--spacing-md);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+        }
+
+        h2 {
+            font-size: 1.25rem;
+            margin-bottom: var(--spacing-md);
+            border-left: 4px solid var(--accent-color);
+            padding-left: var(--spacing-sm);
+            color: var(--text-primary);
+        }
+
+        /* Title Area */
+        header {
+            text-align: center;
+            padding: var(--spacing-lg) 0;
+        }
+
+        h1 {
+            font-size: 32px;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-sm);
+            text-shadow: 0 0 10px rgba(250, 204, 21, 0.3);
+        }
+
+        header p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Inputs */
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--spacing-md);
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .input-group label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .input-control {
+            display: flex;
+            align-items: center;
+            background: #1e293b;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .input-control input,
+        .input-control select {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            padding: 8px;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .input-control span {
+            padding: 0 8px;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            background: #0f172a;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            border-left: 1px solid var(--border-color);
+        }
+
+        /* Radio Group */
+        .radio-group {
+            display: flex;
+            gap: var(--spacing-md);
+            margin-top: 8px;
+        }
+
+        .radio-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+
+        /* Tables */
+        .table-container {
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: #0f172a;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+
+        th,
+        td {
+            padding: 8px;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
+            font-size: 0.9rem;
+        }
+
+        th {
+            background: #1e293b;
+            color: var(--text-secondary);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        /* Sticky Columns */
+        th:first-child,
+        td:first-child {
+            position: sticky;
+            left: 0;
+            background: #1e293b;
+            /* Ensure opaque background */
+            z-index: 10;
+            border-right: 2px solid var(--border-color);
+        }
+
+        th:last-child,
+        td:last-child {
+            position: sticky;
+            right: 0;
+            background: #1e293b;
+            z-index: 10;
+            border-left: 2px solid var(--border-color);
+        }
+
+        td input {
+            width: 100%;
+            min-width: 60px;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            text-align: center;
+            outline: none;
+            font-size: 1rem;
+        }
+
+        td input:focus {
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .total-cell {
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        /* Results */
+        .result-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--spacing-md);
+        }
+
+        .result-box {
+            text-align: center;
+            border: 1px solid;
+            border-radius: 8px;
+            padding: var(--spacing-lg);
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .result-box.exp {
+            border-color: var(--exp-color);
+        }
+
+        .result-box.bp {
+            border-color: var(--bp-color);
+        }
+
+        .result-label {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .result-value {
+            font-size: 40px;
+            font-weight: bold;
+            font-family: monospace;
+        }
+
+        .result-value.exp {
+            color: var(--exp-color);
+            text-shadow: 0 0 10px rgba(34, 197, 94, 0.4);
+        }
+
+        .result-value.bp {
+            color: var(--bp-color);
+            text-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+        }
+
+        /* Share Area */
+        .share-area {
+            text-align: center;
+        }
+
+        .btn {
+            background: var(--accent-color);
+            color: #000;
+            border: none;
+            padding: 12px 32px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(250, 204, 21, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--exp-color);
+            color: #000;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: bold;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            z-index: 100;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 24px;
+            }
+
+            .result-container {
+                grid-template-columns: 1fr;
+            }
+
+            .result-value {
+                font-size: 32px;
+            }
+
+            .input-control {
+                height: 48px;
+            }
+
+            /* Ensure table is scrollable but container fits */
+            .table-container {
+                margin: 0 -8px;
+                /* Negative margin to maximize space in card */
+                border-left: none;
+                border-right: none;
+            }
+        }
+
+        /* Accumulation List */
+        .accumulation-container {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: #0f172a;
+            overflow: visible;
+        }
+
+        /* 内側：スクロール専用 */
+        .table-scroll {
+            max-height: 500px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .accumulation-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .accumulation-table th,
+        .accumulation-table td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+            background: #0f172a;
+        }
+
+        /* ===== ヘッダー ===== */
+        .accumulation-table thead {
+            position: sticky;
+            top: 0;
+            z-index: 25;
+        }
+
+        .accumulation-table th {
+            background: #1e293b;
+            color: var(--text-secondary);
+            position: sticky;
+            top: 0;
+            z-index: 20;
+        }
+
+        /* ヘッダー影（固定感） */
+        .accumulation-table thead::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: -12px;
+            height: 12px;
+            pointer-events: none;
+            background: linear-gradient(to bottom,
+                    rgba(0, 0, 0, 0.35),
+                    rgba(0, 0, 0, 0));
+        }
+
+        /* ===== 固定列（ボディ） ===== */
+        .accumulation-table td:first-child {
+            position: sticky;
+            left: 0;
+            background: #1e293b;
+            z-index: 10;
+        }
+
+        .accumulation-table td:last-child {
+            position: sticky;
+            right: 0;
+            background: #1e293b;
+            z-index: 10;
+        }
+
+        /* ===== ヘッダー × 固定列（最前面） ===== */
+        .accumulation-table th:first-child {
+            left: 0;
+            z-index: 30;
+        }
+
+        .accumulation-table th:last-child {
+            right: 0;
+            z-index: 30;
+        }
+
+        .row-highlight {
+            background: rgba(250, 204, 21, 0.1);
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        .val-exp {
+            color: var(--exp-color);
+        }
+
+        .val-bp {
+            color: var(--bp-color);
+        }
+
+        .row-highlight {
+            background: rgba(250, 204, 21, 0.1);
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        /* Mobile List View for Accumulation */
+        .mobile-list-item {
+            display: none;
+            /* Hidden on PC */
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .mobile-list-item.highlight {
+            background: rgba(250, 204, 21, 0.1);
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .mobile-list-header {
+            font-weight: bold;
+            margin-bottom: 4px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .mobile-list-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            padding: 2px 0;
+        }
+
+        .val-exp {
+            color: var(--exp-color);
+        }
+
+        .val-bp {
+            color: var(--bp-color);
+        }
+
+        @media (max-width: 768px) {
+            .accumulation-table {
+                display: none;
+            }
+
+            /* Hide table on mobile */
+            .mobile-list-item {
+                display: block;
+            }
+
+            /* Show list on mobile */
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // --- Utils & Constants ---
+
+        const COLS = ['武器オート', '武器スロ', 'オート', 'アクセ', 'オファーアクセ', '石板1', '石板2', '石板3', '石板4'];
+        // All inputs are numeric %, 5 rows
+        const DEFAULT_TABLE = Array(5).fill().map(() => Array(9).fill(0));
+
+        const HIGHLIGHT_COUNTS = [100, 50, 30, 10, 5, 1];
+
+        // --- Logic ---
+
+        function calculateExp(base, ls, tableSum, party, mutual, book) {
+            const lsFactor = 1 + (ls + tableSum) / 100;
+            const partyFactor = 1 + (0.5 * party) + (mutual / 100);
+            return Math.floor(base * lsFactor * partyFactor * book);
+        }
+
+        function calculateBp(base, ls, tableSum) {
+            const lsFactor = 1 + (ls + tableSum) / 100;
+            return Math.floor(base * lsFactor);
+        }
+
+        // --- Components ---
+
+        const InputField = ({ label, value, onChange, unit, type = "number", options = null, min = 0 }) => (
+            <div className="input-group">
+                <label>{label}</label>
+                <div className="input-control">
+                    {options ? (
+                        <select value={value} onChange={e => onChange(Number(e.target.value))}>
+                            {options.map(opt => (
+                                <option key={opt} value={opt}>{opt}</option>
+                            ))}
+                        </select>
+                    ) : (
+                        <input
+                            type="number"
+                            inputMode="numeric"
+                            value={value}
+                            min={min}
+                            onChange={e => {
+                                const val = Number(e.target.value);
+                                if (val >= 0) onChange(val);
+                            }}
+                        />
+                    )}
+                    {unit && <span>{unit}</span>}
+                </div>
+            </div>
+        );
+
+        const CorrectionTable = ({ title, color, data, onChange }) => {
+            const handleChange = (rowIdx, colIdx, val) => {
+                const newData = data.map((row, r) =>
+                    row.map((cell, c) => (r === rowIdx && c === colIdx) ? Number(val) : cell)
+                );
+                onChange(newData);
+            };
+
+            return (
+                <div className="card">
+                    <h2 style={{ borderLeftColor: color }}>{title}</h2>
+                    <div className="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>キャラ</th>
+                                    {COLS.map((col, i) => <th key={i}>{col}</th>)}
+                                    <th>合計</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {data.map((row, r) => {
+                                    const rowSum = row.reduce((a, b) => a + b, 0);
+                                    return (
+                                        <tr key={r}>
+                                            <td style={{ fontWeight: 'bold' }}>#{r + 1}</td>
+                                            {row.map((cell, c) => (
+                                                <td key={c}>
+                                                    <input
+                                                        type="number"
+                                                        inputMode="numeric"
+                                                        value={cell || ''}
+                                                        placeholder="0"
+                                                        min="0"
+                                                        onChange={e => handleChange(r, c, e.target.value)}
+                                                    />
+                                                </td>
+                                            ))}
+                                            <td className="total-cell">{rowSum}%</td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            );
+        };
+
+        const AccumulationList = ({ exp, bp }) => {
+            const runs = React.useMemo(() =>
+                Array.from({ length: 100 }, (_, i) => 100 - i),
+                []);
+
+            return (
+                <div className="card">
+                    <h2>取得周回数別一覧</h2>
+                    <div className="accumulation-container">
+                        <div className="table-scroll">
+                            {/* PC Table View */}
+                            <table className="accumulation-table">
+                                <thead>
+                                    <tr>
+                                        <th>周回数</th>
+                                        <th>取得経験値</th>
+                                        <th>取得BP</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {runs.map(n => {
+                                        const isHigh = HIGHLIGHT_COUNTS.includes(n);
+                                        return (
+                                            <tr key={n} className={isHigh ? 'row-highlight' : ''}>
+                                                <td>{n}周</td>
+                                                <td className="val-exp">{(exp * n).toLocaleString()}</td>
+                                                <td className="val-bp">{(bp * n).toLocaleString()}</td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                        {/* Mobile List View */}
+                        <div>
+                            {runs.map(n => {
+                                const isHigh = HIGHLIGHT_COUNTS.includes(n);
+                                return (
+                                    <div key={n} className={`mobile-list-item ${isHigh ? 'highlight' : ''}`}>
+                                        <div className="mobile-list-header">
+                                            <span>{n}周</span>
+                                        </div>
+                                        <div className="mobile-list-row">
+                                            <span>EXP</span>
+                                            <span className="val-exp">{(exp * n).toLocaleString()}</span>
+                                        </div>
+                                        <div className="mobile-list-row">
+                                            <span>BP</span>
+                                            <span className="val-bp">{(bp * n).toLocaleString()}</span>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const App = () => {
+            // --- State ---
+            const [baseExp, setBaseExp] = React.useState(0);
+            const [baseBP, setBaseBP] = React.useState(0);
+            const [partySize, setPartySize] = React.useState(1); // 1-4
+            const [bookMultiplier, setBookMultiplier] = React.useState(1); // 1, 2, 3, 5
+            const [lsExp, setLsExp] = React.useState(0);
+            const [lsBP, setLsBP] = React.useState(0);
+            const [mutualBonus, setMutualBonus] = React.useState(0); // 0 or 50
+
+            // Tables: 5 rows x 9 columns
+            const [expTable, setExpTable] = React.useState(DEFAULT_TABLE);
+            const [bpTable, setBpTable] = React.useState(DEFAULT_TABLE);
+
+            const [toastVisible, setToastVisible] = React.useState(false);
+
+            // --- URL Parsing (On Mount) ---
+            React.useEffect(() => {
+                const params = new URLSearchParams(window.location.search);
+                if (params.has('be')) setBaseExp(Number(params.get('be')));
+                if (params.has('bb')) setBaseBP(Number(params.get('bb')));
+                if (params.has('p')) setPartySize(Number(params.get('p')));
+                if (params.has('b')) setBookMultiplier(Number(params.get('b')));
+                if (params.has('lse')) setLsExp(Number(params.get('lse')));
+                if (params.has('lsb')) setLsBP(Number(params.get('lsb')));
+                if (params.has('m')) setMutualBonus(Number(params.get('m')));
+
+                // Parse tables: "1,2,3;4,5,6"
+                const parseTable = (str) => {
+                    if (!str) return DEFAULT_TABLE;
+                    try {
+                        const rows = str.split(';');
+                        if (rows.length !== 5) return DEFAULT_TABLE;
+                        return rows.map(r => {
+                            const cols = r.split(',');
+                            if (cols.length !== 9) return Array(9).fill(0);
+                            return cols.map(Number);
+                        });
+                    } catch {
+                        return DEFAULT_TABLE;
+                    }
+                };
+
+                if (params.has('et')) setExpTable(parseTable(params.get('et')));
+                if (params.has('bt')) setBpTable(parseTable(params.get('bt')));
+            }, []);
+
+            // --- URL Update (On State Change) ---
+            React.useEffect(() => {
+                const serializeTable = (tbl) => tbl.map(r => r.join(',')).join(';');
+                const params = new URLSearchParams();
+
+                if (baseExp > 0) params.set('be', baseExp);
+                if (baseBP > 0) params.set('bb', baseBP);
+                if (partySize > 1) params.set('p', partySize);
+                if (bookMultiplier > 1) params.set('b', bookMultiplier);
+                if (lsExp > 0) params.set('lse', lsExp);
+                if (lsBP > 0) params.set('lsb', lsBP);
+                if (mutualBonus > 0) params.set('m', mutualBonus);
+
+                const etStr = serializeTable(expTable);
+                const btStr = serializeTable(bpTable);
+
+                const defaultTblStr = serializeTable(DEFAULT_TABLE);
+
+                if (etStr !== defaultTblStr) params.set('et', etStr);
+                if (btStr !== defaultTblStr) params.set('bt', btStr);
+
+                const newUrl = `${window.location.pathname}?${params.toString()}`;
+                window.history.replaceState(null, '', newUrl);
+            }, [baseExp, baseBP, partySize, bookMultiplier, lsExp, lsBP, mutualBonus, expTable, bpTable]);
+
+            // --- Calculation ---
+            const totalExpCorrection = expTable.flat().reduce((a, b) => a + b, 0);
+            const totalBpCorrection = bpTable.flat().reduce((a, b) => a + b, 0);
+
+            const finalExp = calculateExp(baseExp, lsExp, totalExpCorrection, partySize, mutualBonus, bookMultiplier);
+            const finalBp = calculateBp(baseBP, lsBP, totalBpCorrection);
+
+            // --- Handlers ---
+            const copyUrl = () => {
+                navigator.clipboard.writeText(window.location.href).then(() => {
+                    setToastVisible(true);
+                    setTimeout(() => setToastVisible(false), 2000);
+                });
+            };
+
+            return (
+                <div className="container">
+                    <header>
+                        <h1>経験値 / BP 計算ツール</h1>
+                        <p>ステータス補正を含めた最終値を計算します</p>
+                    </header>
+
+                    <div className="card">
+                        <h2>基本設定</h2>
+                        <div className="input-grid">
+                            <InputField label="基礎経験値" value={baseExp} onChange={setBaseExp} />
+                            <InputField label="基礎BP" value={baseBP} onChange={setBaseBP} />
+
+                            <InputField
+                                label="協力人数"
+                                value={partySize}
+                                onChange={setPartySize}
+                                options={[1, 2, 3, 4]}
+                                unit="人"
+                            />
+
+                            <InputField
+                                label="倍書"
+                                value={bookMultiplier}
+                                onChange={setBookMultiplier}
+                                options={[1, 2, 3, 5]}
+                                unit="倍"
+                            />
+
+                            <InputField label="LS (経験値)" value={lsExp} onChange={setLsExp} unit="%" />
+                            <InputField label="LS (BP)" value={lsBP} onChange={setLsBP} unit="%" />
+
+                            <div className="input-group">
+                                <label>相互フォロワーボーナス</label>
+                                <div className="radio-group">
+                                    <label className="radio-label">
+                                        <input
+                                            type="radio"
+                                            name="mutual"
+                                            checked={mutualBonus === 0}
+                                            onChange={() => setMutualBonus(0)}
+                                        />
+                                        なし (0%)
+                                    </label>
+                                    <label className="radio-label">
+                                        <input
+                                            type="radio"
+                                            name="mutual"
+                                            checked={mutualBonus === 50}
+                                            onChange={() => setMutualBonus(50)}
+                                        />
+                                        あり (+50%)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <CorrectionTable
+                        title="経験値補正テーブル"
+                        color="var(--exp-color)"
+                        data={expTable}
+                        onChange={setExpTable}
+                    />
+
+                    <CorrectionTable
+                        title="BP補正テーブル"
+                        color="var(--bp-color)"
+                        data={bpTable}
+                        onChange={setBpTable}
+                    />
+
+                    <div className="result-container">
+                        <div className="result-box exp">
+                            <div className="result-label">最終経験値</div>
+                            <div className="result-value exp">{finalExp.toLocaleString()}</div>
+                        </div>
+                        <div className="result-box bp">
+                            <div className="result-label">最終BP</div>
+                            <div className="result-value bp">{finalBp.toLocaleString()}</div>
+                        </div>
+                    </div>
+
+                    <AccumulationList exp={finalExp} bp={finalBp} />
+
+                    <div className="share-area">
+                        <button className="btn" onClick={copyUrl}>URLをコピー</button>
+                    </div>
+
+                    <div className={`toast ${toastVisible ? 'show' : ''}`}>
+                        URLをコピーしました
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+
+</html>
