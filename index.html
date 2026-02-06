@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>取得経験値・BP計算ツール</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=M+PLUS+1p:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <div class="main-container">
+        <header class="app-header">
+            <h1>取得経験値・BP計算ツール</h1>
+        </header>
+
+        <div class="tabs-container">
+            <button class="tab-btn active" data-tab="4p">4人協力</button>
+            <button class="tab-btn" data-tab="2p">2人協力</button>
+            <button class="tab-btn" data-tab="solo">ソロ</button>
+        </div>
+
+        <div id="content-area">
+            <!-- Content will be injected by JS or hidden/shown. 
+                 To keep it simple and clean, let's have 3 separate container divs 
+                 and toggle their visibility. -->
+
+            <!-- 4人協力 -->
+            <div id="tab-4p" class="tab-content active">
+                <!-- 4P Content Structure -->
+            </div>
+
+            <!-- 2人協力 -->
+            <div id="tab-2p" class="tab-content">
+                <!-- 2P Content Structure -->
+            </div>
+
+            <!-- ソロ -->
+            <div id="tab-solo" class="tab-content">
+                <!-- Solo Content Structure -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Templates for repetitive content to be cloned by JS -->
+    <template id="calc-structure-template">
+        <div class="calc-wrapper">
+            <!-- 1. Base Stats -->
+            <section class="card base-stats-card">
+                <h2>基礎値設定</h2>
+                <div class="input-row">
+                    <div class="input-group">
+                        <label>基礎経験値</label>
+                        <input type="number" class="base-exp" value="0">
+                    </div>
+                    <div class="input-group bp-group">
+                        <label>基礎BP</label>
+                        <input type="number" class="base-bp" value="0">
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. Bonus Settings -->
+            <section class="card bonus-card">
+                <h2>ボーナス・条件設定</h2>
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label>倍書</label>
+                        <select class="book-select">
+                            <option value="1">なし (1倍)</option>
+                            <option value="2">2倍書</option>
+                            <option value="3">3倍書</option>
+                            <option value="5">5倍書</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>LS (経験値 %)</label>
+                        <input type="number" class="ls-exp" value="0" placeholder="例: 60">
+                    </div>
+
+                    <div class="input-group coop-only">
+                        <label>協力人数</label>
+                        <input type="number" class="coop-count" value="4" min="1" max="4">
+                    </div>
+                    <div class="input-group coop-only">
+                        <label>LS (BP %)</label>
+                        <input type="number" class="ls-bp" value="0" placeholder="例: 60">
+                    </div>
+                    <div class="input-group coop-only">
+                        <label>相互フォロワー</label>
+                        <select class="mutual-follow">
+                            <option value="0">なし</option>
+                            <option value="50">あり (+50%)</option>
+                        </select>
+                    </div>
+                    <div class="input-group coop-only">
+                        <label>復帰ボーナス</label>
+                        <select class="return-bonus">
+                            <option value="0">なし</option>
+                            <option value="50">あり (+50%)</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group solo-only" style="display:none;">
+                        <label>フレンドLS (%)</label>
+                        <input type="number" class="friend-ls" value="0">
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. Character Correction Table (EXP) -->
+            <section class="card table-card">
+                <h2>経験値補正(%)</h2>
+                <div class="table-scroll-wrapper">
+                    <table class="correction-table exp-table">
+                        <thead>
+                            <tr>
+                                <th class="sticky-col">キャラ</th>
+                                <th>武器オート</th>
+                                <th>武器スロ</th>
+                                <th>オート</th>
+                                <th>アクセ</th>
+                                <th>オファー</th>
+                                <th>石板1</th>
+                                <th>石板2</th>
+                                <th>石板3</th>
+                                <th>石板4</th>
+                                <th>合計</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Rows generated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 4. Character Correction Table (BP) - Hidden for Solo -->
+            <section class="card table-card bp-section">
+                <h2>BP補正(%)</h2>
+                <div class="table-scroll-wrapper">
+                    <table class="correction-table bp-table">
+                        <thead>
+                            <tr>
+                                <th class="sticky-col">キャラ</th>
+                                <th>武器オート</th>
+                                <th>武器スロ</th>
+                                <th>オート</th>
+                                <th>アクセ</th>
+                                <th>オファー</th>
+                                <th>石板1</th>
+                                <th>石板2</th>
+                                <th>石板3</th>
+                                <th>石板4</th>
+                                <th>合計</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Rows generated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 5. Character Selection (2P/Solo only) -->
+            <section class="card char-select-card" style="display:none;">
+                <h2>計算対象キャラ選択</h2>
+                <div class="char-select-container">
+                    <!-- Checkboxes generated by JS -->
+                </div>
+            </section>
+
+            <!-- 6. Results -->
+            <section class="card result-card">
+                <h2>計算結果 (1周あたり)</h2>
+                <div class="result-display">
+                    <!-- Results generated by JS -->
+                </div>
+            </section>
+
+            <!-- 7. Runs List -->
+            <section class="card runs-list-card">
+                <h2>周回数別一覧</h2>
+                <div class="table-scroll-wrapper runs-table-height-limit">
+                    <table class="runs-table">
+                        <thead>
+                            <!-- Header generated by JS -->
+                        </thead>
+                        <tbody>
+                            <!-- Rows generated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </template>
+
+    <script src="js/script.js"></script>
+</body>
+
+</html>
