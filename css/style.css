@@ -1,1 +1,321 @@
-body {}
+:root {
+    --bg-color: #F7F9FC;
+    --card-bg: #FFFFFF;
+    --border-color: #C9D6E3;
+
+    --accent-main: #4AA3DF;
+    --accent-main-gradient: linear-gradient(180deg, #6BB8E8, #4AA3DF);
+    --accent-sub: #7BC6A4;
+
+    --color-exp: #F4B400;
+    --color-bp: #9B7EDC;
+
+    --text-main: #2C3E50;
+    --text-sub: #607D8B;
+    --text-inactive: #A0AAB6;
+
+    --table-header-bg: #EAF2FA;
+    --table-row-even: #FFFFFF;
+    --table-row-odd: #F3F7FB;
+    --table-total-bg: #FFF6D8;
+}
+
+body {
+    font-family: "Noto Sans JP", "Roboto", sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    margin: 0;
+    padding: 20px;
+    font-size: 14px;
+}
+
+.main-container {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+/* Header */
+.app-header {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.app-header h1 {
+    color: var(--accent-main);
+    font-family: "M PLUS 1p", sans-serif;
+    font-weight: 700;
+    margin: 0;
+    text-shadow: 0 2px 4px rgba(74, 163, 223, 0.2);
+}
+
+/* Tabs */
+.tabs-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 24px;
+    background: #E3E9F0;
+    padding: 4px;
+    border-radius: 16px;
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.tab-btn {
+    background: transparent;
+    border: none;
+    padding: 10px 24px;
+    font-family: "M PLUS 1p", sans-serif;
+    font-weight: 700;
+    color: var(--text-sub);
+    cursor: pointer;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+    font-size: 15px;
+}
+
+.tab-btn.active {
+    background: var(--accent-main);
+    color: #FFF;
+    box-shadow: 0 2px 8px rgba(74, 163, 223, 0.4);
+}
+
+/* Cards */
+.card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.card h2 {
+    font-size: 16px;
+    color: var(--text-main);
+    border-left: 4px solid var(--accent-main);
+    padding-left: 12px;
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-weight: 700;
+}
+
+/* Inputs */
+.input-row {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.input-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.input-group label {
+    font-size: 12px;
+    color: var(--text-sub);
+    margin-bottom: 6px;
+    font-weight: 500;
+}
+
+input[type="number"],
+select {
+    height: 38px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0 12px;
+    text-align: right;
+    /* Numbers right aligned */
+    font-family: "Roboto", sans-serif;
+    /* Consular numbers */
+    font-weight: 500;
+    font-size: 15px;
+    color: var(--text-main);
+    outline: none;
+    transition: border-color 0.2s;
+    background: #FFF;
+}
+
+select {
+    text-align: left;
+    /* Select text left aligned usually better */
+    cursor: pointer;
+}
+
+input:focus,
+select:focus {
+    border-color: var(--accent-main);
+}
+
+/* Tables */
+.table-scroll-wrapper {
+    overflow-x: auto;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.correction-table,
+.runs-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 800px;
+    /* Prevent crunching */
+}
+
+.correction-table th,
+.runs-table th {
+    background: var(--table-header-bg);
+    color: var(--text-main);
+    padding: 10px 8px;
+    font-size: 13px;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    /* Higher than sticky-col (10) */
+}
+
+.correction-table td,
+.runs-table td {
+    padding: 8px;
+    text-align: center;
+    border-bottom: 1px solid #EEF2F6;
+    font-family: "Roboto", sans-serif;
+    font-size: 14px;
+}
+
+.runs-table td {
+    font-size: 18px;
+}
+
+.correction-table tr:nth-child(odd),
+.runs-table tr:nth-child(odd) {
+    background: var(--table-row-odd);
+}
+
+.correction-table tr:nth-child(even),
+.runs-table tr:nth-child(even) {
+    background: var(--table-row-even);
+}
+
+/* Input in tables */
+.correction-table input {
+    width: 60px;
+    height: 32px;
+    padding: 0 8px;
+    text-align: center;
+}
+
+/* Total Column */
+.total-cell {
+    background: var(--table-total-bg) !important;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+/* Sticky Column */
+.sticky-col {
+    position: sticky;
+    left: 0;
+    z-index: 10;
+    background: inherit;
+    /* Matches row bg */
+    border-right: 1px solid var(--border-color);
+}
+
+/* Ensure header sticky matches header bg */
+thead .sticky-col {
+    background: var(--table-header-bg);
+    z-index: 30;
+    /* Highest priority: Top-Left Corner */
+}
+
+/* Char Selection */
+.char-select-container {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.char-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: #F0F4F8;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.char-checkbox-label:hover {
+    background: #E1E8F0;
+}
+
+.char-checkbox-label input:checked+span {
+    color: var(--accent-main);
+}
+
+/* Results */
+.result-display {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.result-item {
+    flex: 1;
+    min-width: 200px;
+    background: #FFF;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.result-item h3 {
+    margin: 0 0 12px 0;
+    font-size: 14px;
+    color: var(--text-sub);
+}
+
+.result-value {
+    font-family: "Roboto", sans-serif;
+    font-weight: 700;
+    font-size: 32px;
+    margin: 8px 0;
+}
+
+.result-value.exp {
+    color: var(--color-exp);
+}
+
+.result-value.bp {
+    color: var(--color-bp);
+}
+
+/* Runs Table Formatting */
+.runs-table-height-limit {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.exp-text {
+    color: #CF8600;
+    font-weight: 700;
+}
+
+.bp-text {
+    color: var(--color-bp);
+    font-weight: 700;
+}
